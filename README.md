@@ -17,11 +17,33 @@ For every complex number s = σ + it with s ≠ 1, the proof establishes
 
 Submission **#96295** held the Core 1 record in the 22 November 2026, 06:32:56 UTC+8 leaderboard snapshot. Its single Lean file uses **2,388 normalized leaderboard tokens**, down **88.97%** from the 21-file, 21,641-token reference closure. Playground awarded **65.873483**. The archive contains the five submitted sources spanning our four record improvements. [Challenge statement](https://play.bohrium.com/challenges/lean-4-verification-rh-core-pillar-1-5-classical-z-c7f72729) · [Progress curve](https://riemann.verifytask.cn/) · [Archived measurements](records/results.json)
 
-## The argument
+## Where the reference proof spends its source
 
-1. **Remove the pole once.** Let F be the entire extension of (s−1)ζ(s). Abel summation with the fractional part of u gives a single Mellin remainder E(s). For Re(s) > 0, F(s) = s(1−(s−1)E(s)). Bounding that same integral gives a quadratic upper bound for ∣F∣ and a lower bound for the height of a hypothetical zero.
-2. **Keep the contribution of one prescribed zero.** On a disk with relative growth budget B, factoring out a nearby zero by Mathlib's differentiable divided difference cuts the budget to B/2. An induction starting at an integer n > 2B then needs only linear arithmetic for descent. In the other branch, normalize a primitive of f'/f at zero. Borel–Carathéodory on radius 1/6 and Cauchy's estimate on the circle of radius 1/12 give 24(log B+1).
-3. **Put the three heights into the same lemma.** Apply the disk bound to translates of F at heights 0,t,2t. Only the middle height carries the prescribed zero. The modulus-one Dirichlet character product controls the weighted sum of logarithms. The independent identity 3+4cos θ+cos (2θ) = 2(1+cos θ)² controls the weighted von Mangoldt series. The residual reciprocal-distance term contradicts the available growth when c = 2⁻²⁰. The paper works out the constants. [Analytic estimates](paper/analysis.tex) · [Three-height calculation](paper/three-heights.tex)
+The reference theorem, `Formalism.ZF.zeroFreeRegion`, assembles its local Landau estimate as `localZeroExpansionOfFactorization zeroFactorization logDerivBoundOnBall`. The first input carries enough information to recover every zero and its order. In `ZeroFactor.lean`, `exists_factorization_of_sum_order` builds a factorization with a holomorphic remainder. In `LandauLocalOf.lean`, `hasDerivAt_prod_sub_pow` differentiates the finite product of powers of w − ρ. Its logarithmic derivative yields a sum of reciprocal distances. A separate estimate controls the zero-free factor. The eventual three-height contradiction uses one prescribed reciprocal distance and the sign of the other contributions. That observation lets us change what the local lemma must return. [Author’s source release](https://alpo.ge/remark.pdf) · [Challenge statement and baseline](https://play.bohrium.com/challenges/lean-4-verification-rh-core-pillar-1-5-classical-z-c7f72729)
+
+## The local estimate and its three applications
+
+**1. Retain the contribution the caller needs.** Let f be entire, with f(0) ≠ 0 and every zero in the closed left half-plane. Suppose ∣f(w)∣ ≤ B∣f(0)∣ on the closed disk of radius 1/2, so B ≥ 1. Take x = 0, or choose a zero ρ with ∣ρ∣ ≤ 1/6 and x ≤ −Re(1/ρ). The submitted lemma `ClassicalZFR.landau` proves
+
+> x − Re(f′(0)/f(0)) ≤ 24(log B + 1).
+
+**2. Remove one zero.** Take g to be the divided difference of f at ρ. Mathlib’s `differentiableOn_dslope` gives differentiability even at ρ, and `sub_smul_dslope_of_zero` gives f(w) = (w − ρ)g(w). On the circle ∣u∣ = 1/2, the reverse triangle inequality gives ∣u − ρ∣ ≥ 1/2 − 1/6 = 1/3 ≥ 2∣ρ∣. Since ∣f(0)∣ = ∣ρ∣·∣g(0)∣, we obtain
+
+> ∣g(u)∣ = ∣f(u)∣ / ∣u − ρ∣ ≤ (B/2)∣g(0)∣.
+
+The maximum modulus principle extends the bound to the closed disk. Logarithmic differentiation gives f′(0)/f(0) = −1/ρ + g′(0)/g(0). The condition on x cancels the removed term, so it suffices to apply the lemma recursively to g with zero weight. A repeated zero can be removed again. This handles multiplicities without carrying a finite product through the proof.
+
+An earlier version chose n with B < 2ⁿ. The final code chooses a natural number n > 2B. At n = m + 1, the facts B ≥ 1 and 2B < m + 1 imply B < m, precisely the recursive premise 2(B/2) < m. On return, log(B/2) ≤ log B finishes the bound. The source credits Pi’s public submission for this monotonicity step. [Final disk lemma](Solution.lean#L75-L119) · [Induction diff](diffs/96285-to-96293.diff)
+
+**3. Account for the constant 24.** When no witness exists, x = 0. Any zero inside the inner disk would have −Re(1/ρ) ≥ 0 and would supply a witness. Thus f′/f has a primitive G there with G(0) = 0. From f = f(0) exp(G) we get Re G ≤ log B. Put A = log B + 1. Apply `borelCaratheodory_zero` on the disk of radius 1/6 and evaluate on the circle of radius 1/12 to obtain ∣G∣ ≤ 2A. Cauchy’s derivative bound then gives ∣f′(0)/f(0)∣ = ∣G′(0)∣ ≤ 2A/(1/12) = 24A. Lean supplies that last step as `norm_deriv_le_of_forall_mem_sphere_norm_le`. [Fixed-circle estimate diff](diffs/96281-to-96285.diff)
+
+**4. Use the lemma at three heights.** Let F be the entire extension of (s − 1)ζ(s). The same Abel–Mellin remainder gives quadratic growth and a lower bound ∣t∣ ≥ 1/2 for the height of a hypothetical zero β + it in the claimed region. Put L = log(∣t∣ + 2), d = 2⁻²⁰/L and a = β + 5d. Translate F to a, a + it and a + 2it. The middle translate has a zero at −5d and contributes 4/(5d) after weighting. The real pole term contributes at most 3/(4d), leaving 1/(20d).
+
+Two positivity estimates control the remaining terms. A product inequality for the character of modulus one bounds the weighted logarithms of the three center values from below. For the logarithmic derivatives, 3 + 4 cos θ + cos(2θ) = 2(1 + cos θ)² and the nonnegative von Mangoldt coefficients give a nonnegative weighted series. Substitution requires (2²⁰ − 11520)L < 103860, while L ≥ log 2 > 1/2 makes the left side greater than 518528. This proves the stated region. [Full calculation](paper/three-heights.tex)
+
+## Accounting for the 88.97% reduction
+
+The reference closure contains 21 Lean files and 21,641 normalized tokens. Our first archived comparison, submission 96267, already implements the entire-function and single-zero route in one file of 3,128 tokens, a difference of 18,513. The four subsequent patches save 236, 168, 300 and 36 more, totaling 740. Together the two intervals account for 19,253 of 21,641 tokens, or **88.97%**. The first comparison measures two complete implementations. The four later reductions can each be replayed from a submitted source, and each saving belongs to its whole patch. [Measurements and source hashes](records/results.json)
 
 ## The four patches
 
