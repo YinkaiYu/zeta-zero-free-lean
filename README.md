@@ -5,7 +5,7 @@
 
 ## The problem and the competition
 
-The Riemann zeta function connects complex analysis with the distribution of primes. The classical zero-free region theorem gives a strip along the line $`\operatorname{Re}(s)=1`$ in which the function has no zeros. Its width decreases slowly as the absolute value of the imaginary part grows. Such estimates help bound the error in counting primes. The Riemann hypothesis makes a stronger prediction, placing every nontrivial zero on $`\operatorname{Re}(s)=\tfrac12`$. This archive gives an unconditional proof of the classical region.
+The Riemann zeta function connects complex analysis with the distribution of primes. The classical zero-free region theorem gives a strip along the line $`\mathrm{Re}(s)=1`$ in which the function has no zeros. Its width decreases slowly as the absolute value of the imaginary part grows. Such estimates help bound the error in counting primes. The Riemann hypothesis makes a stronger prediction, placing every nontrivial zero on $`\mathrm{Re}(s)=\tfrac12`$. This archive gives an unconditional proof of the classical region.
 
 The Agentic Science Challenge selected five theorems from Levent Alpöge’s formalization as separate competition problems. Core 1 is the classical zero-free region. Entrants must prove the same Lean 4 statement using a fixed version of Mathlib, Lean’s mathematics library. The Lean kernel checks the proof. The competition then measures its source length in normalized tokens. A Core 1 record means a shorter verified proof of this particular theorem. The green progress curve combines the best results across all five problems.
 
@@ -25,10 +25,10 @@ The reference theorem, `Formalism.ZF.zeroFreeRegion`, assembles its local Landau
 
 ## The local estimate and its three applications
 
-**1. Retain the contribution the caller needs.** Let f be entire, with $`f(0)\ne0`$ and every zero in the closed left half-plane. Suppose $`|f(w)|\le B|f(0)|`$ on the closed disk of radius 1/2, so B ≥ 1. Take x = 0, or choose a zero ρ with $`|\rho|\le\tfrac16`$ and $`x\le-\operatorname{Re}(1/\rho)`$. The submitted lemma `ClassicalZFR.landau` proves
+**1. Retain the contribution the caller needs.** Let f be entire, with $`f(0)\ne0`$ and every zero in the closed left half-plane. Suppose $`|f(w)|\le B|f(0)|`$ on the closed disk of radius 1/2, so B ≥ 1. Take x = 0, or choose a zero ρ with $`|\rho|\le\tfrac16`$ and $`x\le-\mathrm{Re}(1/\rho)`$. The submitted lemma `ClassicalZFR.landau` proves
 
 ```math
-x-\operatorname{Re}\!\left(\frac{f'(0)}{f(0)}\right)\le 24(\log B+1).
+x-\mathrm{Re}\!\left(\frac{f'(0)}{f(0)}\right)\le 24(\log B+1).
 ```
 
 **2. Remove one zero.** Take g to be the divided difference of f at ρ. Mathlib’s `differentiableOn_dslope` gives differentiability even at ρ, and `sub_smul_dslope_of_zero` gives f(w) = (w − ρ)g(w). On the circle ∣u∣ = 1/2, the reverse triangle inequality gives $`|u-\rho|\ge\tfrac12-\tfrac16=\tfrac13\ge2|\rho|`$. Since $`|f(0)|=|\rho|\,|g(0)|`$, we obtain
