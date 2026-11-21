@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "To cite the proof, paper, or source archive, please use this citation."
+type: software
+title: "A Compact Lean 4 Proof of the Classical Zero-Free Region for the Riemann Zeta Function"
+authors:
+  - family-names: Yu
+    given-names: Yin-Kai
+date-released: "2026-11-22"
+version: "1.0.0"
+repository-code: "https://github.com/YinkaiYu/zeta-zero-free-lean"
+url: "https://github.com/YinkaiYu/zeta-zero-free-lean/releases/tag/v1.0.0"

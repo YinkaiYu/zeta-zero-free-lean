@@ -1,0 +1,157 @@
+\section{Abel summation and the pole at one}
+\label{sec:abel-growth}
+
+Write \(s=\sigma+it\), and let \(F\) be the entire extension of
+\((s-1)\zeta(s)\), with \(F(1)=1\). The same function will be used at the
+three heights \(0,t,2t\). For \(\sigma>0\), put
+\[
+  E(s)=\int_1^\infty \{u\}\,u^{-s-1}\,du,
+  \qquad \{u\}=u-\lfloor u\rfloor .
+\]
+Here \(u^s=\exp(s\log u)\) for \(u>0\). We claim that
+\begin{equation}
+  F(s)=s\bigl(1-(s-1)E(s)\bigr)
+  \qquad (\sigma>0).
+  \label{eq:abel-entire}
+\end{equation}
+
+For \(\sigma>1\), the partial sums of the constant Dirichlet coefficient
+\(1\) are \(\lfloor u\rfloor\). Abel summation therefore gives
+\[
+  \zeta(s)
+  =s\int_1^\infty \lfloor u\rfloor u^{-s-1}\,du
+  =s\left(\frac{1}{s-1}-E(s)\right).
+\]
+In the second equality we used \(\lfloor u\rfloor=u-\{u\}\) and
+\(\int_1^\infty u^{-s}\,du=(s-1)^{-1}\). Both integrals in this
+decomposition converge absolutely. In Lean the first equality is the
+constant-coefficient specialization of \lean{LSeries_eq_mul_integral'}.
+
+For the continuation, define \(h(u)=\mathbf{1}_{(1,\infty)}(u)\{u\}\)
+on the positive real axis. Then
+\(E(s)=\mathcal{M}h(-s)\), where
+\(\mathcal{M}h(w)=\int_0^\infty u^{w-1}h(u)\,du\).
+The measurable function \(h\) is bounded by one and vanishes in a
+neighbourhood of zero. These estimates give holomorphy of the Mellin
+transform for \(\Re w<0\) by
+\lean{mellin_differentiableAt_of_isBigO_rpow}. Both sides of
+\eqref{eq:abel-entire} are thus holomorphic on the connected half-plane
+\(\sigma>0\), and the Abel identity gives equality on a neighbourhood of
+\(s=2\). The identity theorem proves \eqref{eq:abel-entire} throughout the
+half-plane, including at \(s=1\). These steps are formalized in
+\lean{tail_smooth}, \lean{remainder_eq}, and \lean{entireFormula}.
+
+Two consequences of the same remainder estimate will be needed. Absolute
+integration gives
+\begin{equation}
+  |E(s)|\leq\int_1^\infty u^{-\sigma-1}\,du=\frac{1}{\sigma}.
+  \label{eq:abel-remainder-bound}
+\end{equation}
+For \(\sigma\geq \tfrac12\), equations \eqref{eq:abel-entire}
+and \eqref{eq:abel-remainder-bound} imply
+\begin{equation}
+  |F(s)|\leq |s|\bigl(1+2(|s|+1)\bigr)
+           \leq (2|s|+2)^2 .
+  \label{eq:quadratic-growth}
+\end{equation}
+These are \lean{mellin_bound} and \lean{growth} in the formal proof.
+
+Suppose now that \(F(s)=0\) and \(\sigma\geq 3/4\).
+Since \(F(1)=1\) and \(s\ne 0\), equation \eqref{eq:abel-entire} gives
+\(E(s)=(s-1)^{-1}\). Hence \eqref{eq:abel-remainder-bound} and the triangle
+inequality imply
+\[
+  \sigma \leq |s-1|\leq |\sigma-1|+|t|.
+\]
+This gives \(|t|\geq 2\sigma-1\) for \(3/4\leq\sigma\leq 1\)
+and \(|t|\geq1\) for \(\sigma\geq1\). In particular,
+\begin{equation}
+  F(\sigma+it)=0,\quad \sigma\geq\tfrac34
+  \quad\Longrightarrow\quad |t|\geq\tfrac12 .
+  \label{eq:height-separation}
+\end{equation}
+This separation supplies the lower bound on the height used to estimate
+the pole terms in the final argument.
+
+\section{A local Landau inequality}
+\label{sec:landau-disk}
+
+Let \(D_r=\{w\in\mathbb C:|w|<r\}\). Suppose that \(f\) is entire,
+\(f(0)\ne0\), every zero of \(f\) has nonpositive real part, and
+\[
+  |f(w)|\leq B|f(0)|\qquad (|w|\leq 1/2).
+\]
+In particular \(B\geq1\). Allow \(x\in\mathbb R\) either to be zero or to
+satisfy \(x\leq-\Re(\rho^{-1})\) for some zero
+\(\rho\in\overline D_{1/6}\). Then
+\begin{equation}
+  x-\Re\frac{f'(0)}{f(0)}\leq 24(\log B+1).
+  \label{eq:landau-disk}
+\end{equation}
+The parameter \(x\) allows the same lemma to retain a specified zero at
+one height and to bound the logarithmic derivative alone at the other
+heights. Its two permitted cases are expressed by \lean{witness} and
+the disjunction in \lean{landau}.
+
+\subsection{Removing a zero}
+\label{sec:landau-peel}
+
+Choose a natural number \(n>2B\) and argue by induction on \(n\), allowing
+\(f,B,x\) to vary. The case \(n=0\) is excluded by \(B\geq1\).
+At a successor \(n=m+1\), suppose first that there is a zero \(\rho\)
+as in the condition on \(x\). Since \(\rho\ne0\), the factorization
+\(f(w)=(w-\rho)g(w)\) has \(g(0)\ne0\). The formal proof defines \(g\)
+by the divided difference \lean{dslope}, whose value at \(\rho\) is \(f'(\rho)\).
+Holomorphy of this divided difference follows from
+\lean{differentiableOn_dslope}.
+
+On \(|w|=1/2\), we have
+\[
+  |w-\rho|\geq \tfrac12-|\rho|\geq 2|\rho|,\qquad
+  |f(0)|=|\rho|\,|g(0)|.
+\]
+Consequently \(|g(w)|\leq (B/2)|g(0)|\) on the circle. The maximum
+modulus principle extends the estimate to its closed disk. All zeros of
+\(g\) are zeros of \(f\). The induction hypothesis applies to \(g\) with
+bound \(B/2\) and with \(x=0\), since \(2B<m+1\) and \(B\geq1\) give
+\(2(B/2)=B<m\). Logarithmic differentiation gives
+\[
+ \frac{f'(0)}{f(0)}=-\rho^{-1}+\frac{g'(0)}{g(0)},\qquad
+ x-\Re\frac{f'(0)}{f(0)}
+   \leq -\Re\frac{g'(0)}{g(0)}
+   \leq 24\bigl(\log(B/2)+1\bigr).
+\]
+Monotonicity of the real logarithm now gives \eqref{eq:landau-disk}.
+The Lean source credits this monotonicity step after division of the
+growth bound to Pi's public Core~1 submission \#96263.
+
+\subsection{The zero-free disk}
+\label{sec:landau-regular}
+
+In the remaining branch the hypothesis on \(x\) forces \(x=0\).
+Any zero \(\rho\in D_{1/6}\) would satisfy
+\(-\Re(\rho^{-1})=-\Re(\rho)/|\rho|^2\geq0\), supplying a witness even
+for \(x=0\). Thus \(f'/f\) is holomorphic on \(D_{1/6}\). It has a
+primitive \(G\) there with \(G(0)=0\). The logarithmic derivatives of
+\(f\) and \(\exp G\) agree, so their quotient is constant on the disk.
+Evaluation at the origin gives \(f(w)=f(0)\exp G(w)\). The formal proof
+uses \lean{isExactOn_ball} for the primitive and \lean{logDeriv_eqOn_iff}
+for this identity.
+
+Set \(A=\log B+1>0\). The original bound gives
+\(\Re G(w)=\log(|f(w)|/|f(0)|)\leq\log B\) on \(D_{1/6}\).
+The Borel--Carath\'eodory inequality for a function vanishing at the
+centre gives
+\[
+  |G(w)|\leq \frac{2A|w|}{1/6-|w|}\qquad (|w|<1/6).
+\]
+In particular, \(|G(w)|\leq 2A\) on \(|w|=1/12\). Cauchy's derivative
+estimate on that circle yields
+\[
+  -\Re\frac{f'(0)}{f(0)}\leq |G'(0)|
+                           \leq \frac{2A}{1/12}
+                           =24(\log B+1).
+\]
+This proves \eqref{eq:landau-disk} in the second branch. The two estimates
+are implemented by \lean{borelCaratheodory_zero} and
+\lean{norm_deriv_le_of_forall_mem_sphere_norm_le}.

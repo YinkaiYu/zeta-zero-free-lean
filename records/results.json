@@ -1,0 +1,89 @@
+{
+  "challenge": "Core 1: classical zero-free region for the Riemann zeta function",
+  "board_source": "https://riemann.verifytask.cn/api/board",
+  "board_snapshot": "2026-11-22T06:32:56.052422+08:00",
+  "baseline_board_tokens": 21641,
+  "baseline_lean_files": 21,
+  "baseline_characters": 74010,
+  "submitter": "Yin-Kai Yu (余荫铠)",
+  "model": "GPT-6.2 Astra",
+  "harness": "ChatGPT Desktop",
+  "official_score_source": "Playground CLI, final resultsJson.final_score",
+  "records": [
+    {
+      "attempt": 96267,
+      "submitted_utc": "2026-11-21T21:19:23+00:00",
+      "source_sha256": "12b55555b627681b4498aa0030b550a54416a20ab57630b645cd54cd07a9b8ce",
+      "submitted_bundle_sha256": "d2ec1ca99aba4169d3f23a84b82a9e8ca8b0db2ab05ff61fb68c73a49370a71d",
+      "board_tokens": 3128,
+      "official_score": 64.46846,
+      "pillar_record": false,
+      "previous_pillar_leader": {
+        "attempt": 96263,
+        "board_tokens": 3099
+      },
+      "curve_before_percent": 40.93,
+      "curve_after_percent": 40.93
+    },
+    {
+      "attempt": 96281,
+      "submitted_utc": "2026-11-21T21:33:38+00:00",
+      "source_sha256": "6fab841153694b3a385a61a0bb5eb9c66cb0bd2e1addb36a3dbc0b9492aaa950",
+      "submitted_bundle_sha256": "94ec1281c613be5ab6fd9dc8ac637fe4afac4004f5ebe3e409ea539ee8df8deb",
+      "board_tokens": 2892,
+      "official_score": 64.892842,
+      "pillar_record": true,
+      "previous_pillar_leader": {
+        "attempt": 96276,
+        "board_tokens": 3024
+      },
+      "curve_before_percent": 40.93,
+      "curve_after_percent": 40.94
+    },
+    {
+      "attempt": 96285,
+      "submitted_utc": "2026-11-21T21:43:10+00:00",
+      "source_sha256": "8eced3806e1dfb8ee028606efbeadc0153df346c716395fa7f33dc3639743c28",
+      "submitted_bundle_sha256": "d1a060e168cdfef256e9c863901312b9941741dda24addcfad5b8c1e22d89677",
+      "board_tokens": 2724,
+      "official_score": 65.22627,
+      "pillar_record": true,
+      "previous_pillar_leader": {
+        "attempt": 96283,
+        "board_tokens": 2762
+      },
+      "curve_before_percent": 40.94,
+      "curve_after_percent": 40.95
+    },
+    {
+      "attempt": 96293,
+      "submitted_utc": "2026-11-21T22:10:52+00:00",
+      "source_sha256": "75aa8c1de8e350187ff29c43d9d0eee358f08d5286c485ce6dea5420664dd4be",
+      "submitted_bundle_sha256": "051b5e98bab279c20a54936ed98ee55a17bbdf60b4880c95c874ce77dd7790a9",
+      "board_tokens": 2424,
+      "official_score": 65.798238,
+      "pillar_record": true,
+      "previous_pillar_leader": {
+        "attempt": 96286,
+        "board_tokens": 2686
+      },
+      "curve_before_percent": 41.6,
+      "curve_after_percent": 41.61
+    },
+    {
+      "attempt": 96295,
+      "submitted_utc": "2026-11-21T22:18:20+00:00",
+      "source_sha256": "6d90939ccf5262b83ec9817229bae59c6d10a288afb5d769cc35b6437dd6b492",
+      "submitted_bundle_sha256": "48b6e8d8362a5b37699a6fbcf8a5139d4406479a753c567432785407e42b2a86",
+      "board_tokens": 2388,
+      "official_score": 65.873483,
+      "pillar_record": true,
+      "previous_pillar_leader": {
+        "attempt": 96293,
+        "board_tokens": 2424
+      },
+      "curve_before_percent": 41.61,
+      "curve_after_percent": 41.61
+    }
+  ]
+}

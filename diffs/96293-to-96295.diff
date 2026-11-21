@@ -1,0 +1,94 @@
+--- a/Solution.lean
++++ b/Solution.lean
+@@ -23,34 +23,34 @@
+   have hb x : ‖tail x‖ ≤ 1 := (norm_indicator_le_norm_self frac x).trans (frac_bound x)
+   apply mellin_differentiableAt_of_isBigO_rpow (a:=0) (b:=s.re-1)
+   · exact (locallyIntegrableOn_const (1:ℂ)).mono (by measurability) (by simpa using Eventually.of_forall hb)
+-  · exact isBigO_of_le _ fun x => by simpa using hb x
+-  · exact hs
++  · exact isBigO_of_le _ (by simpa using hb)
++  · assumption
+   · apply IsBigO.of_bound'
+     filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds zero_lt_one)] with x (hx:x<1)
+-    simp [tail,mem_Ioi,hx.not_gt]
++    simp [tail,hx.not_gt]
+   · linarith
+ 
+ lemma remainder_eq : remainder = fun z => mellin tail (-z) := by
+-  funext z; rw [mellin,tail,←indicator_smul,setIntegral_indicator measurableSet_Ioi];simp [remainder]
++  funext z; rw [mellin,tail,←indicator_smul,setIntegral_indicator measurableSet_Ioi];simp;rfl
+ 
+ lemma entireFormula (hs : 0 < s.re) : riemannZeta₁ s = s * (1-(s-1)*remainder s) := by
+   apply (differentiable_riemannZeta₁.differentiableOn.analyticOnNhd (isOpen_re_gt 0)).eqOn_of_preconnected_of_eventuallyEq
+     (DifferentiableOn.analyticOnNhd (by intro z hz; have := tail_smooth (s:=-z) (by simpa using hz); rw [remainder_eq]; fun_prop) (isOpen_re_gt 0))
+     (convex_halfSpace_re_gt 0).isPreconnected (z₀ := 2) (by norm_num) _ hs
+-  filter_upwards [(isOpen_re_gt 1).mem_nhds (by norm_num : 1 < (2:ℂ).re)] with z hz
+-  have h := LSeries_eq_mul_integral' (1 : ℕ → ℂ) zero_le_one hz (by simp; rfl)
++  filter_upwards [(isOpen_re_gt 1).mem_nhds (x:=2) (by norm_num)] with z hz
++  have h := LSeries_eq_mul_integral' 1 zero_le_one hz (by simp; rfl)
+   simp [LSeries_one_eq_riemannZeta hz] at h
+   have hi := integral_Ioi_cpow_of_lt (a := -z) (by simpa) zero_lt_one
+   simp [← neg_sub z 1,neg_add_eq_sub,-neg_sub] at hi
+-  suffices riemannZeta z = z*(z-1)⁻¹ - z * remainder z by
+-    have hn : z ≠ 1 := by grind [one_re]
++  suffices riemannZeta z = z*((z-1)⁻¹-remainder z) by
++    have hn : z≠1 := by grind [one_re]
+     grind [riemannZeta_eq_inv_sub_mul hn]
+-  rw [h, ← hi, remainder, ← mul_sub, ← integral_sub
++  rw [h, ← hi, ← integral_sub
+     (integrableOn_Ioi_cpow_of_lt (by simpa) zero_lt_one)
+     ((integrableOn_Ioi_cpow_of_lt (by simp;linarith) zero_lt_one).mul_bdd
+       (by fun_prop : Measurable frac).aestronglyMeasurable (.of_forall frac_bound))]
+   congr 1; refine setIntegral_congr_fun measurableSet_Ioi fun x hx => ?_
+-  have hx0 : 0 < x := zero_lt_one.trans hx
++  have hx0 : 0<x := zero_lt_one.trans hx
+   have hxC := ofReal_ne_zero.mpr hx0.ne'
+   simp [frac, Int.fract, ← Int.natCast_floor_eq_floor hx0.le,
+     neg_add_eq_sub,cpow_neg, cpow_sub _ _ hxC]; field [hxC]
+@@ -82,21 +82,19 @@
+   induction n generalizing f B x <;> have hB := one_le_of_le_mul_right₀ (norm_pos_iff.mpr h0) (hb 0 (by simp))
+   case zero => grind
+   case succ n ih =>
+-    by_cases has : witness f x
+-    · obtain ⟨ρ, hr, hzero, hxρ⟩ := has
+-      obtain ⟨g,hg,rfl⟩ : ∃ g, Differentiable ℂ g ∧ (·-ρ)*g=f :=
++    rcases em (witness f x) with ⟨ρ, hr, hzero, hxρ⟩ | has
++    · obtain ⟨g,hg,rfl⟩ : ∃ g, Differentiable ℂ g ∧ (·-ρ)*g=f :=
+         ⟨_,differentiableOn_univ.mp ((differentiableOn_dslope univ_mem).mpr hd.differentiableOn),
+         funext (sub_smul_dslope_of_zero hzero)⟩
+       simp at h0 hz
+-      have ih0 := ih (B:=B/2) hg h0.2 (fun w hw => by
+-        apply norm_le_of_forall_mem_frontier_norm_le (U:=ball 0 2⁻¹) isBounded_ball hg.diffContOnCl _ (by simpa [closure_ball] using hw)
+-        intro u hu
++      have ih0 := ih (B:=B/2) hg h0.2 (fun w hw => norm_le_of_forall_mem_frontier_norm_le (U:=ball 0 2⁻¹) isBounded_ball hg.diffContOnCl (fun u hu => by
+         simp [frontier_ball] at hu hb
+-        nlinarith [hb u hu.le,norm_sub_norm_le u ρ, norm_nonneg (g u), norm_pos_iff.mpr h0.1])
++        nlinarith [hb u hu.le,norm_sub_norm_le u ρ, norm_nonneg (g u), norm_pos_iff.mpr h0.1]) (by simpa [closure_ball]))
+         (by grind) (.inl rfl) (by grind)
+       rw [logDeriv_mul] <;> first | fun_prop | simp_all [logDeriv_apply (·-ρ),-inv_re]
+       -- As in Pi's public #96263, use monotonicity after dividing the growth bound.
+-      linarith [Real.log_le_log (by positivity) (half_le_self (zero_le_one.trans hB))]
++      grw [half_le_self (zero_le_one.trans hB)] at ih0
++      linarith
+     · obtain rfl := hx.resolve_right has
+       have nonzero z (hz' : z ∈ U) hf := has ⟨z,(mem_ball_zero_iff.mp hz').le,hf,by
+         simpa [inv_re] using div_nonpos_of_nonpos_of_nonneg (hz z hf) (normSq_nonneg z)⟩
+@@ -170,7 +168,7 @@
+   simp (disch:=first | positivity | simp [hpos.ne',(K _).1]) [-inv_re,logDeriv_apply,deriv_comp_const_add,(K _).2,Real.log_div,Real.log_mul,Real.log_pow,d] at hp r t u
+   simp [inv_re,normSq_apply] at r
+   have pole := inv_anti₀ (by positivity) hgap
+-  have negt := inv_anti₀ (by norm_num) hht
++  have negt := inv_anti₀ (by positivity) hht
+   grw [re_le_norm,norm_inv,←abs_im_le_norm ((⟨a,_⟩:ℂ)-1)] at t u <;> try (simp;grind)
+   simp [d,abs_mul,div_eq_mul_inv,mul_inv_rev] at t u pole negt
+   -- The trigonometric square supplies positivity at all three heights.
+@@ -178,8 +176,6 @@
+   have M := HasSum.nonneg (fun n => by
+     simp [LSeries.term_def₀,cpow_def]
+     split_ifs <;> simp_all [exp_re,mul_re,mul_im,log_re,log_im,mul_comm (Real.log _),mul_assoc,Real.cos_two_mul]
+-    calc
+-      0 ≤ 2*Λ n*Real.exp _*(1+Real.cos _)^2 := by positivity
+-      _ = _ := by ring) (((S 0).mul_left 3).add ((S s.im).mul_left 4) |>.add (S (2*s.im)))
++    linear_combination (2*Λ n*Real.exp _) * sq_nonneg (1+Real.cos _)) (((S 0).mul_left 3).add ((S s.im).mul_left 4) |>.add (S (2*s.im)))
+   linarith [Real.log_le_self hpos.le,Real.log_two_lt_d9]
+ end ClassicalZFR

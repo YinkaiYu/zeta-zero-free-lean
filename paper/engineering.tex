@@ -1,0 +1,142 @@
+\section{What changed in the five archived proofs}
+\label{sec:engineering}
+
+The reference implementation assembles the zero-free region from named
+results for zero factorization, a local logarithmic derivative estimate,
+the three-height inequality, growth, a reciprocal bound, and bounded
+heights. Its entry point is \lean{Formalism.ZF.zeroFreeRegion}.
+The challenge assigns its 21-file dependency closure 21,641 normalized
+Lean tokens. By the first snapshot studied here, the submitted proof
+already used the entire function \(F(s)=(s-1)\zeta(s)\) at all three
+heights. The four source comparisons below start from that implementation.
+
+Table~\ref{tab:runs} records the public results. Comparing consecutive
+archived team proofs, with v22 omitted, gives savings of 236, 168, 300
+and 36 tokens. These differences measure all changes in each patch together.
+
+\subsection{The Dirichlet series at the three centers (v21 to v23)}
+
+In v21 the common quantity \(D(z)\) was defined as
+\(-\Re(\zeta'(z)/\zeta(z))\). To prove positivity, the helper
+\lean{triple} first converted three convergent Dirichlet series into this
+form. In v23, \(D(z)\) is defined directly as the real part of the
+von Mangoldt Dirichlet series. The library result
+\lean{LSeries_vonMangoldt_eq_deriv_riemannZeta_div}
+identifies that series with \(-\zeta'/\zeta\) for \(\Re z>1\).
+The conversion now occurs once, in the identity relating \(D\) to
+\(F'/F\). At the point of summation,
+\lean{LSeriesSummable_vonMangoldt} gives convergence at every required
+height. With \(S(v)\) the real \lean{HasSum} statement at \(a+iv\),
+the submitted combination reads
+\begin{verbatim}
+(((S 0).mul_left 3).add ((S s.im).mul_left 4) |>.add (S (2*s.im)))
+\end{verbatim}
+\lean{HasSum.nonneg} transfers termwise nonnegativity to this sum.
+Expanding the cosine of twice the angle turns the trigonometric factor
+into \(2(1+\cos\theta)^2\).
+
+The same edit moved the uses of \lean{zeroHeight} and \lean{poleTerm_le}
+into the contradiction argument. It also simplified the passage from
+the modulus-one character product
+\lean{DirichletCharacter.norm_LFunction_product_ge_one} to a product of
+values of \(F\). Given the horizontal gap \(d\leq a-1\), the single
+inequality \(d\leq |a+iv-1|\) holds for every \(v\). Rewriting
+\(\zeta(z)=(z-1)^{-1}F(z)\) in the product exposes all three
+denominators to the same order-preserving rewrite. The earlier script
+constructed and applied a separate bound on \(|\zeta(a+iv)|\) at each
+height. See \texttt{diffs/96267-to-96281.diff}.
+
+\subsection{A derivative bound from one circle (v23 to v24)}
+
+In the zero-free branch of the disk argument, let \(g\) denote the
+primitive of \(f'/f\), normalized by \(g(0)=0\), and put
+\(A=\log B+1\). Both proofs establish \(\Re g\leq A\) on the disk of
+radius \(1/6\). In v23, \lean{HasDerivAt.le_of_lip'} required an
+eventual estimate \(|g(w)-g(0)|\leq C|w|\) at zero. The proof therefore
+introduced a neighborhood filter and kept the variable \(|w|\) throughout
+the estimate. In v24, \lean{Complex.borelCaratheodory_zero} supplies
+\[
+ |g(w)|\leq \frac{2A|w|}{1/6-|w|}.
+\]
+Evaluating on \(|w|=1/12\) gives \(|g(w)|\leq 2A\).
+The Cauchy estimate
+\lean{Complex.norm_deriv_le_of_forall_mem_sphere_norm_le} takes a bound
+\(C\) on a sphere of radius \(r\), together with differentiability inside
+and continuity on the closure, and returns \(|g'(0)|\leq C/r\).
+Here \(C/r=24A\). Once the boundary estimate is in the hypothesis
+\lean{H}, the archived script closes its numerical step with
+\begin{verbatim}
+        simp at hz
+        norm_num [hz] at H;linarith
+\end{verbatim}
+
+The interface between the disk estimate and the main theorem changed
+as well. The helper \lean{good} now returns a complex equality for \(F'/F\)
+alongside nonvanishing. The main proof instantiates a single local
+function at \(0,t,2t\) and rewrites all three resulting inequalities
+together. This removes the separately stated \lean{scaledWindow} and the
+real abbreviation \(D\). In the zero-removal branch, monotonicity of
+\(\log\) gives \(\log(B/2)\leq\log B\) directly. The source credits
+this last observation to Pi's public submission \#96263.
+See \texttt{diffs/96281-to-96285.diff}.
+
+\subsection{The induction parameter and the growth bound (v24 to v25)}
+
+Removing a zero \(\rho\) within radius \(1/6\) gives a factorization
+\(f(w)=(w-\rho)g(w)\), where the relative growth bound for \(g\) on
+the disk of radius \(1/2\) is \(B/2\). In v24 the induction starts with
+\(B<2^n\). In v25, \lean{exists_nat_gt} supplies \(n>2B\).
+At a successor step \(2B<n+1\) and \(B\geq 1\) imply \(B<n\).
+This is precisely the induction premise \(2(B/2)<n\) for the new
+function. Linear arithmetic now suffices for the decrease.
+
+The two versions use the same divided difference \lean{dslope}.
+The library lemma \lean{differentiableOn_dslope} transfers
+differentiability across the removed zero, and
+\lean{sub_smul_dslope_of_zero} identifies the product with \(f\)
+pointwise. In v25, function extensionality turns the latter into an
+equality of functions. Destructuring the existence statement with
+\lean{rfl} replaces \(f\) by its product in every hypothesis and in the
+goal. In particular, \lean{logDeriv_mul} now applies directly to the
+goal. Its hypotheses are nonvanishing and differentiability of both
+factors at zero. The maximum-modulus argument still uses
+\lean{Complex.norm_le_of_forall_mem_frontier_norm_le} to pass from the
+boundary estimate to the closed disk.
+
+Independently, the growth theorem changed its mathematical statement.
+The v24 bound was \(|F(z)|\leq R^8\) under \(R\geq2\),
+\(\Re z\geq1/2\) and \(|z|\leq4R\). The v25 lemma gives
+\(|F(z)|\leq(2|z|+2)^2\) under the sole hypothesis \(\Re z\geq1/2\).
+The disk proof specializes it to \((16R)^2\) at all three centers.
+The Mellin remainder is now defined by its integral, the form needed
+for the norm bound. A function equality identifies it with the Mellin
+transform at \(-z\) when differentiability is needed.
+\lean{Complex.isOpen_re_gt} supplies the open half-planes used in
+analytic continuation. See \texttt{diffs/96285-to-96293.diff}.
+
+\subsection{Two algebraic end steps (v25 to v26)}
+
+In the Abel identity, v26 asks directly for the factored expression
+\(\zeta(z)=z((z-1)^{-1}-E(z))\), with \(E(z)\) the remainder integral.
+The partial summation formula \lean{LSeries_eq_mul_integral'}
+already has \(z\) outside its integral. The new expression therefore
+matches the conclusion of integral subtraction without redistributing
+this factor.
+
+In the branch of the induction that removes a zero, the recursive inequality
+\lean{ih0} contains \(\log(B/2)\) on its right-hand side. From \(1\leq B\),
+the proof uses \(B/2\leq B\) inside that inequality, then closes the
+linear goal. The two lines in v26 are
+\begin{verbatim}
+      grw [half_le_self (zero_le_one.trans hB)] at ih0
+      linarith
+\end{verbatim}
+Finally, the summand with \(\theta=t\log n\) and
+\(w=\Lambda(n)\exp(-a\log n)\) reduces to
+\(w(3+4\cos\theta+\cos(2\theta))\).
+Previously a \lean{calc} block proved \(2w(1+\cos\theta)^2\geq0\) and
+then proved the polynomial identity by \lean{ring}. In v26,
+\lean{linear_combination} multiplies the inequality for the square by
+\(2w\) and checks the resulting identity in one step. These changes,
+together with the smaller elaboration edits in
+\texttt{diffs/96293-to-96295.diff}, account for the final 36-token drop.

@@ -1,0 +1,182 @@
+--- a/Solution.lean
++++ b/Solution.lean
+@@ -26,15 +26,14 @@
+ lemma tail_smooth : DifferentiableOn ℂ remainder {z | 0 < z.re} := by
+   intro s hs
+   refine (DifferentiableAt.comp (g := mellin tail) s ?_ differentiableAt_id.neg).differentiableWithinAt
+-  have hb {l : Filter ℝ} : ∀ᶠ x in l, ‖tail x‖ ≤ 1 :=
+-    .of_forall fun x => (norm_indicator_le_norm_self frac x).trans (frac_bound x)
++  have hb x : ‖tail x‖ ≤ 1 := (norm_indicator_le_norm_self frac x).trans (frac_bound x)
+   apply mellin_differentiableAt_of_isBigO_rpow (a := 0) (b := -s.re - 1)
+-  · exact (locallyIntegrableOn_const (1:ℂ)).mono (by unfold tail; fun_prop (disch := exact measurableSet_Ioi)) (by simpa using hb)
+-  · exact IsBigO.of_bound' (by simpa using hb (l := atTop))
++  · exact (locallyIntegrableOn_const (1:ℂ)).mono (by unfold tail; fun_prop (disch := exact measurableSet_Ioi)) (by filter_upwards with x using by simpa using hb x)
++  · exact isBigO_of_le _ fun x => by simpa using hb x
+   · simpa
+   · apply IsBigO.of_bound' 
+-    filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds zero_lt_one)] with x (hx : x < 1)
+-    simp [tail, mem_Ioi, not_lt.mpr hx.le]
++    filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds zero_lt_one)] with x hx
++    simp [tail, mem_Ioi, not_lt.mpr (mem_Iio.mp hx).le]
+   · simp
+ 
+ abbrev integrand (s : ℂ) (x : ℝ) := (x:ℂ)^(-s-1) * frac x
+@@ -43,11 +42,11 @@
+   simp [integrand]
+ 
+ lemma entireFormula (hs : 0 < s.re) : riemannZeta₁ s = s * (1-(s-1)*remainder s) := by
+-  have hu : IsOpen {z : ℂ | 0 < z.re} := isOpen_lt continuous_const continuous_re
+-  apply (differentiable_riemannZeta₁.differentiableOn.analyticOnNhd hu).eqOn_of_preconnected_of_eventuallyEq
+-    (DifferentiableOn.analyticOnNhd (by have := tail_smooth; fun_prop) hu)
++  have hu (r:ℝ) := isOpen_lt (f:=fun _ : ℂ => r) continuous_const continuous_re
++  apply (differentiable_riemannZeta₁.differentiableOn.analyticOnNhd (hu 0)).eqOn_of_preconnected_of_eventuallyEq
++    (DifferentiableOn.analyticOnNhd (by have := tail_smooth; fun_prop) (hu 0))
+     (convex_halfSpace_re_gt 0).isPreconnected (z₀ := 2) (by norm_num) _ hs
+-  filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds (by norm_num : 1 < (2:ℂ).re)] with z hz
++  filter_upwards [(hu 1).mem_nhds (by norm_num : 1 < (2:ℂ).re)] with z hz
+   have h := LSeries_eq_mul_integral' (1 : ℕ → ℂ) zero_le_one hz (by simp; rfl)
+   simp [LSeries_one_eq_riemannZeta hz] at h
+   have hf : IntegrableOn (integrand z) (Ioi 1) := (integrableOn_Ioi_cpow_of_lt (by simp; linarith) zero_lt_one).mul_bdd
+@@ -55,11 +54,11 @@
+   have hi := integral_Ioi_cpow_of_lt (a := -z) (by simpa) zero_lt_one
+   simp [← neg_sub z 1,neg_add_eq_sub,-neg_sub] at hi
+   suffices riemannZeta z = z*(z-1)⁻¹ - z * remainder z by
+-    have hn : z ≠ 1 := fun e => hz.ne' (congrArg re e)
++    have hn : z ≠ 1 := by grind [one_re]
+     grind [riemannZeta_eq_inv_sub_mul hn]
+   rw [h, ← hi, mellin_eq, ← mul_sub, ← integral_sub
+     (integrableOn_Ioi_cpow_of_lt (by simpa) zero_lt_one) hf]
+-  congr 1; apply setIntegral_congr_fun measurableSet_Ioi; intro x hx
++  congr 1; refine setIntegral_congr_fun measurableSet_Ioi fun x hx => ?_
+   have hx0 : 0 < x := zero_lt_one.trans hx
+   have hxC := ofReal_ne_zero.mpr hx0.ne'
+   simp [integrand, frac, Int.fract, ← Int.natCast_floor_eq_floor hx0.le,
+@@ -71,17 +70,14 @@
+   trans ∫ x : ℝ in Ioi 1, x^(-s.re-1)
+   · apply norm_integral_le_of_norm_le (integrableOn_Ioi_rpow_of_lt he zero_lt_one)
+     filter_upwards [ae_restrict_mem measurableSet_Ioi] with x hx
+-    have h : 0 < x := zero_lt_one.trans hx
+     grw [norm_mul,frac_bound]
+-    simp [norm_cpow_eq_rpow_re_of_pos h]
++    simp [norm_cpow_eq_rpow_re_of_pos (zero_lt_one.trans hx)]
+   · simp [integral_Ioi_rpow_of_lt he zero_lt_one]
+ 
+ theorem entireGrowth (hR : 2 ≤ R) (hz : 1/2 ≤ z.re)
+     (hn : ‖z‖ ≤ 4*R) : ‖riemannZeta₁ z‖ ≤ R^8 := by
+   have hz0 : 0 < z.re := by linarith
+-  rw [entireFormula hz0]
+-  grw [norm_mul, norm_sub_le, norm_mul, norm_sub_le, mellin_bound hz0, ← hz]
+-  grw [hn,hn];norm_num
++  grw [entireFormula hz0, norm_mul, norm_sub_le, norm_mul, norm_sub_le, mellin_bound hz0, ← hz, hn, hn];norm_num
+   obtain ⟨u,hu,rfl⟩ := le_iff_exists_nonneg_add.mp hR
+   rw [← sub_nonneg]; ring_nf; positivity
+ 
+@@ -119,7 +115,8 @@
+         (hg 0)
+       simp [←show f = (·-ρ) * g from funext eqf, logDeriv_apply] at he
+       simp only [he,add_re,inv_neg] at hxρ ⊢
+-      rw [Real.log_div (by linarith) (by norm_num)] at ih0; linarith [Real.log_pos one_lt_two]
++      -- As in Pi's public #96263, use monotonicity after dividing the growth bound.
++      linarith [Real.log_le_log (by positivity) (show B/2≤B by linarith)]
+     · obtain rfl := hx.resolve_right has
+       have nonzero z (hz' : z ∈ U) : f z ≠ 0 := fun hf => has ⟨z,(mem_ball_zero_iff.mp hz').le,hf,by
+         simpa [inv_re] using div_nonpos_of_nonpos_of_nonneg (hz z hf) (normSq_nonneg z)⟩
+@@ -130,46 +127,26 @@
+       let A := Real.log B + 1
+       have hm : 0 < A := by dsimp [A]; linarith [Real.log_nonneg hB]
+       obtain ⟨c, hc, hfg⟩ := (logDeriv_eqOn_iff diff hgd.cexp isOpen_ball (convex_ball _ _).isPreconnected
+-        (by simp) nonzero).mp (by
+-          intro z hz'
+-          simp [logDeriv_apply, (hg z hz').cexp.deriv, exp_ne_zero])
++        (by simp) nonzero).mp (fun z hz' => by simp [logDeriv_apply,(hg z hz').cexp.deriv])
+       have hr z (hz' : z ∈ U) : (g z).re ≤ A := by
+         have h := hb z (by linarith [mem_ball_zero_iff.mp hz'])
+-        simp [hfg hz', hfg (by simp [U] : 0 ∈ U), hgz, norm_exp] at h
+-        apply le_add_of_le_of_nonneg ((Real.le_log_iff_exp_le (by linarith)).2 ?_) zero_le_one
+-        nlinarith [norm_pos_iff.mpr hc]
+-      apply (hg 0 (by simp)).le_of_lip' (by positivity)
+-      filter_upwards [ball_mem_nhds (0:ℂ) (by norm_num : (0:ℝ) < 12⁻¹)] with z hz'
+-      simp only [hgz, sub_zero]
+-      have hn := mem_ball_zero_iff.mp hz'
+-      have h := borelCaratheodory_zero hm hgd hr (by norm_num) (ball_subset_ball (by norm_num) hz') hgz
+-      rw [le_div_iff₀ (by linarith)] at h
+-      nlinarith [mul_nonneg (norm_nonneg (g z)) (sub_nonneg.mpr hn.le)]
+-
+-
+-abbrev D z := (LSeries (fun n => (Λ n : ℂ)) z).re
+-
+-
+-lemma good (ha : 1 < z.re) : riemannZeta₁ z ≠ 0 ∧ D z = ((z-1)⁻¹).re - (deriv riemannZeta₁ z / riemannZeta₁ z).re := by
+-  have hf := riemannZeta_ne_zero_of_one_lt_re ha
++        simp [hfg hz', hfg (by simp [U] : 0 ∈ U), hgz,norm_exp,mul_comm B,norm_pos_iff.mpr hc] at h
++        linarith [(Real.le_log_iff_exp_le (by linarith)).2 h]
++      have h := norm_deriv_le_of_forall_mem_sphere_norm_le (R:=12⁻¹) (C:=2*A) (by norm_num)
++        (hgd.diffContOnCl_ball (closedBall_subset_ball (by norm_num))) ?_
++      · simp [(hg 0 (by simp)).deriv,A] at h ⊢;linarith
++      · intro z hz
++        have H := borelCaratheodory_zero hm hgd hr (by norm_num) (sphere_subset_ball (by norm_num) hz) hgz
++        simp at hz
++        norm_num [hz] at H;linarith
++
++lemma good (ha : 1 < z.re) : riemannZeta₁ z ≠ 0 ∧ deriv riemannZeta₁ z / riemannZeta₁ z =
++    (z-1)⁻¹ - LSeries (fun n => (Λ n : ℂ)) z := by
++  have := riemannZeta_ne_zero_of_one_lt_re ha
+   have hn : z ≠ 1 := by grind [one_re]
+-  refine ⟨by grind [riemannZeta_eq_inv_sub_mul],?_⟩
+-  rw [D,LSeries_vonMangoldt_eq_deriv_riemannZeta_div ha,←sub_re]
+-  congr 1
++  rw [LSeries_vonMangoldt_eq_deriv_riemannZeta_div ha]
+   grind [deriv_riemannZeta_eq_neg_inv_sub_sq_mul_add,riemannZeta_eq_inv_sub_mul]
+ 
+-lemma scaledWindow (hR:2≤R) (hs:1<z.re) (hnorm:‖z‖≤3*R)
+-    (hx:x=0 ∨ witness (fun w => riemannZeta₁ (z+w)) x) :
+-    x+D z+24*Real.log ‖riemannZeta₁ z‖ ≤ ((z-1)⁻¹).re+24*(8*Real.log R+1) := by
+-  have nz := norm_ne_zero_iff.mpr (good hs).1
+-  have h := landau (B:=R^8/‖riemannZeta₁ z‖)
+-    (by fun_prop) (by simpa using (good hs).1) (fun w hw => ?_) (fun w he => ?_) hx
+-  · simp only [add_zero,deriv_comp_const_add,Real.log_div (by positivity : R^8 ≠ 0) nz,Real.log_pow] at h
+-    rw [(good hs).2];linarith
+-  · simpa [div_mul_cancel₀ _ nz] using entireGrowth hR (z:=z+w) (by simp; linarith [neg_le_of_abs_le (abs_re_le_norm w)]) (by linarith [norm_add_le z w])
+-  · by_contra! hp;exact (good (by simp; linarith : 1<(z+w).re)).1 he
+-
+-set_option maxHeartbeats 800000 in
+ theorem _root_.AlpogeRHCore1.zeroFreeRegion :
+     ∃ c : ℝ, 0 < c ∧ ∀ s : ℂ, s ≠ 1 → 1-c/Real.log (|s.im|+2) ≤ s.re → riemannZeta s ≠ 0 := by
+   refine ⟨(2^20)⁻¹,by positivity,fun s hn hs hz => ?_⟩
+@@ -193,14 +170,18 @@
+   let a := s.re+5*d
+   have hgap : 4*d≤a-1 := by grind
+   have ha : 1<a := by linarith
+-  have W (v x:ℝ) (hv:|v|≤2*|s.im|) := scaledWindow (z:=⟨a,v⟩) (x:=x) hR ha (by
+-    grw [norm_le_abs_re_add_abs_im];grind [abs_eq_max_neg,riemannZeta_ne_zero_of_one_le_re])
++  have K v := good (z:=⟨a,v⟩) ha
++  have W v x (hv:|v|≤2*|s.im|) := landau (f:=fun w => riemannZeta₁ (⟨a,v⟩+w)) (B:=R^8/‖riemannZeta₁ ⟨a,v⟩‖) (x:=x)
++    (by fun_prop) (by simpa using (K v).1) (fun w hw => by
++      simpa [(K v).1] using entireGrowth hR (z:=⟨a,v⟩+w) (by grind [add_re,abs_re_le_norm w,abs_eq_max_neg]) (by grw [norm_add_le,norm_le_abs_re_add_abs_im (⟨a,v⟩:ℂ)];grind [abs_eq_max_neg,riemannZeta_ne_zero_of_one_le_re]))
++    (fun w he => by grind [good (z:=⟨a,v⟩+w),add_re])
+   have r := W 0 0 (by simp) (.inl rfl)
+   have t := W s.im (5*d)⁻¹ (by linarith) (.inr ⟨(-(5*d):ℝ),by
+     simp [abs_of_pos hd];linarith,by convert bad using 2;simp [Complex.ext_iff,a],by simp⟩)
+   have u := W (2*s.im) 0 (by simp [abs_mul]) (.inl rfl)
++  simp (disch:=first | positivity | simp [(K _).1]) [-inv_re,deriv_comp_const_add,(K _).2,Real.log_div,Real.log_pow] at r t u
+   have hp := (1:DirichletCharacter ℂ 1).norm_LFunction_product_ge_one (sub_pos.mpr ha) s.im
+-  have gap (v:ℝ) : d ≤ ‖(⟨a,v⟩:ℂ)-1‖ := by grw [←re_le_norm];simp;linarith
++  have gap v := (show d≤a-1 by linarith).trans (re_le_norm ((⟨a,v⟩:ℂ)-1))
+   simp (disch := grind [one_re]) [DirichletCharacter.LFunctionTrivChar,show ∀ x y:ℂ, x+y=⟨_,_⟩ from fun _ _ => rfl,ofReal_def,riemannZeta_eq_inv_sub_mul] at hp
+   repeat grw [←gap] at hp
+   apply Real.log_nonneg at hp
+@@ -211,11 +192,10 @@
+   grw [re_le_norm,norm_inv,←abs_im_le_norm ((⟨a,_⟩:ℂ)-1)] at t u <;> try (simp;grind)
+   simp [abs_mul,mul_inv_rev] at u
+   simp [d,div_eq_mul_inv,mul_inv_rev] at t pole negt
+-  have S (v : ℝ) := hasSum_re (LSeriesSummable_vonMangoldt (s:=⟨a,v⟩) ha).LSeriesHasSum
++  have S v := hasSum_re (LSeriesSummable_vonMangoldt (s:=⟨a,v⟩) ha).LSeriesHasSum
+   have M := HasSum.nonneg (fun n => by
+-    rcases eq_or_ne n 0 with rfl | hn
+-    · simp
+-    simp (disch:=simp) [LSeries.term_def₀,cpow_def,hn,exp_re,mul_re,mul_im,log_re,log_im,mul_comm (Real.log _),mul_assoc,Real.cos_two_mul]
++    simp (disch:=simp) [LSeries.term_def₀,cpow_def]
++    split_ifs <;> simp_all [exp_re,mul_re,mul_im,log_re,log_im,mul_comm (Real.log _),mul_assoc,Real.cos_two_mul]
+     calc
+       0 ≤ 2*Λ n*Real.exp _*(1+Real.cos _)^2 := by positivity
+       _ = _ := by ring) (((S 0).mul_left 3).add ((S s.im).mul_left 4) |>.add (S (2*s.im)))

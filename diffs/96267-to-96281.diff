@@ -1,0 +1,167 @@
+--- a/Solution.lean
++++ b/Solution.lean
+@@ -16,14 +16,12 @@
+ open Complex Metric Set Filter MeasureTheory Asymptotics Topology ArithmeticFunction
+ noncomputable section
+ namespace ClassicalZFR
+-section
+-open Real
+-variable {s z : ℂ}
++variable {s z : ℂ} {R x : ℝ}
+ abbrev frac : ℝ → ℂ := ofReal ∘ Int.fract
+ def tail := (Ioi 1).indicator frac
+ 
+ lemma frac_bound x : ‖frac x‖ ≤ 1 := by
+-  simpa [frac,abs_of_nonneg (Int.fract_nonneg x)] using (Int.fract_lt_one x).le
++  simpa [frac,Int.abs_fract] using (Int.fract_lt_one x).le
+ abbrev remainder z := mellin tail (-z)
+ lemma tail_smooth : DifferentiableOn ℂ remainder {z | 0 < z.re} := by
+   intro s hs
+@@ -56,10 +54,10 @@
+     (by fun_prop : Measurable frac).aestronglyMeasurable (.of_forall frac_bound)
+   have hi := integral_Ioi_cpow_of_lt (a := -z) (by simpa) zero_lt_one
+   simp [← neg_sub z 1,neg_add_eq_sub,-neg_sub] at hi
+-  suffices riemannZeta z = z/(z-1) - z * remainder z by
++  suffices riemannZeta z = z*(z-1)⁻¹ - z * remainder z by
+     have hn : z ≠ 1 := fun e => hz.ne' (congrArg re e)
+     grind [riemannZeta_eq_inv_sub_mul hn]
+-  rw [h, div_eq_mul_inv, ← hi, mellin_eq, ← mul_sub, ← integral_sub
++  rw [h, ← hi, mellin_eq, ← mul_sub, ← integral_sub
+     (integrableOn_Ioi_cpow_of_lt (by simpa) zero_lt_one) hf]
+   congr 1; apply setIntegral_congr_fun measurableSet_Ioi; intro x hx
+   have hx0 : 0 < x := zero_lt_one.trans hx
+@@ -78,17 +76,7 @@
+     simp [norm_cpow_eq_rpow_re_of_pos h]
+   · simp [integral_Ioi_rpow_of_lt he zero_lt_one]
+ 
+-lemma zeroHeight (hz : 3/4 ≤ z.re) (hzero : riemannZeta₁ z = 0) :
+-    1/2 ≤ |z.im| := by
+-  have hp : 0 < z.re := by linarith
+-  have eq : (z-1)*remainder z=1 := by grind [entireFormula hp, zero_re]
+-  have h := mul_le_mul_of_nonneg_left (mellin_bound hp) (norm_nonneg (z-1))
+-  rw [←norm_mul,eq,norm_one,mul_one_div,le_div_iff₀ hp] at h
+-  have hb := norm_le_abs_re_add_abs_im (z-1)
+-  simp at hb
+-  grind [abs_eq_max_neg]
+-
+-theorem entireGrowth {R : ℝ} (hR : 2 ≤ R) (hz : 1/2 ≤ z.re)
++theorem entireGrowth (hR : 2 ≤ R) (hz : 1/2 ≤ z.re)
+     (hn : ‖z‖ ≤ 4*R) : ‖riemannZeta₁ z‖ ≤ R^8 := by
+   have hz0 : 0 < z.re := by linarith
+   rw [entireFormula hz0]
+@@ -97,13 +85,11 @@
+   obtain ⟨u,hu,rfl⟩ := le_iff_exists_nonneg_add.mp hR
+   rw [← sub_nonneg]; ring_nf; positivity
+ 
+-end
+-
+ abbrev U := ball (0:ℂ) 6⁻¹
+ 
+ abbrev witness (f : ℂ → ℂ) x := ∃ ρ, ‖ρ‖ ≤ 6⁻¹ ∧ f ρ = 0 ∧ x ≤ ((-ρ)⁻¹).re
+ 
+-theorem landau {f : ℂ → ℂ} {B x : ℝ}
++theorem landau {f : ℂ → ℂ} {B : ℝ}
+     (hd : Differentiable ℂ f) (h0 : f 0 ≠ 0)
+     (hb : ∀ w, ‖w‖ ≤ 2⁻¹ → ‖f w‖ ≤ B * ‖f 0‖)
+     (hz : ∀ ρ, f ρ = 0 → ρ.re ≤ 0)
+@@ -161,35 +147,18 @@
+       nlinarith [mul_nonneg (norm_nonneg (g z)) (sub_nonneg.mpr hn.le)]
+ 
+ 
+-def D z := -(deriv riemannZeta z / riemannZeta z).re
+-
+-variable {z : ℂ}
++abbrev D z := (LSeries (fun n => (Λ n : ℂ)) z).re
++
+ 
+ lemma good (ha : 1 < z.re) : riemannZeta₁ z ≠ 0 ∧ D z = ((z-1)⁻¹).re - (deriv riemannZeta₁ z / riemannZeta₁ z).re := by
+   have hf := riemannZeta_ne_zero_of_one_lt_re ha
+   have hn : z ≠ 1 := by grind [one_re]
+   refine ⟨by grind [riemannZeta_eq_inv_sub_mul],?_⟩
+-  unfold D
+-  rw [← neg_re, ← sub_re]
++  rw [D,LSeries_vonMangoldt_eq_deriv_riemannZeta_div ha,←sub_re]
+   congr 1
+   grind [deriv_riemannZeta_eq_neg_inv_sub_sq_mul_add,riemannZeta_eq_inv_sub_mul]
+ 
+-lemma poleTerm_le (hz : 1/2 ≤ |z.im|) : ((z-1)⁻¹).re ≤ 2 := by
+-  grw [re_le_norm,norm_inv,←(hz.trans (by simpa using abs_im_le_norm (z-1)) : 1/2 ≤ ‖z-1‖)]
+-  norm_num
+-
+-lemma triple {a : ℝ} (ha : 1 < a) (t : ℝ) :
+-    0 ≤ 3 * D ⟨a,0⟩ + 4 * D ⟨a,t⟩ + D ⟨a,2*t⟩ := by
+-  have S (v : ℝ) := hasSum_re (LSeriesSummable_vonMangoldt (s:=⟨a,v⟩) ha).LSeriesHasSum
+-  simp only [LSeries_vonMangoldt_eq_deriv_riemannZeta_div (s:=⟨a,_⟩) ha,neg_div,neg_re] at S
+-  apply HasSum.nonneg _ (((S 0).mul_left 3).add ((S t).mul_left 4) |>.add (S (2*t)))
+-  intro n
+-  rcases eq_or_ne n 0 with rfl | hn
+-  · simp
+-  simp only [LSeries.term_of_ne_zero hn,div_eq_mul_inv,← cpow_neg]
+-  simp [cpow_def_of_ne_zero (mod_cast hn : (n:ℂ) ≠ 0),exp_re,mul_re,mul_im,log_re,log_im,mul_comm (Real.log _),mul_assoc,Real.cos_two_mul]
+-  nlinarith [mul_nonneg (mul_nonneg (vonMangoldt_nonneg (n:=n)) (Real.exp_pos (-(a*Real.log n))).le) (sq_nonneg (1+Real.cos (t*Real.log n)))]
+-lemma scaledWindow {R x:ℝ} (hR:2≤R) (hs:1<z.re) (hnorm:‖z‖≤3*R)
++lemma scaledWindow (hR:2≤R) (hs:1<z.re) (hnorm:‖z‖≤3*R)
+     (hx:x=0 ∨ witness (fun w => riemannZeta₁ (z+w)) x) :
+     x+D z+24*Real.log ‖riemannZeta₁ z‖ ≤ ((z-1)⁻¹).re+24*(8*Real.log R+1) := by
+   have nz := norm_ne_zero_iff.mpr (good hs).1
+@@ -212,31 +181,43 @@
+   have hd : 0<d := by positivity
+   have tiny : d≤1/100 := (div_le_iff₀ hpos).2 (by linarith)
+   change 1-d≤s.re at hs
+-  have h1 : s.re<1 := by grind [riemannZeta_ne_zero_of_one_le_re]
+   have bad : riemannZeta₁ s=0 := by grind [riemannZeta_eq_inv_sub_mul]
+-  have hht := zeroHeight (by linarith) bad
++  have hht : 1/2≤|s.im| := by
++    have hp : 0 < s.re := by linarith
++    have eq : (s-1)*remainder s=1 := by grind [entireFormula hp, zero_re]
++    have h := mul_le_mul_of_nonneg_left (mellin_bound hp) (norm_nonneg (s-1))
++    rw [←norm_mul,eq,norm_one,mul_one_div,le_div_iff₀ hp] at h
++    have hb := norm_le_abs_re_add_abs_im (s-1)
++    simp at hb
++    grind [abs_eq_max_neg]
+   let a := s.re+5*d
+-  have hgap : 4*d≤a-1 := by dsimp [a];linarith
++  have hgap : 4*d≤a-1 := by grind
+   have ha : 1<a := by linarith
+   have W (v x:ℝ) (hv:|v|≤2*|s.im|) := scaledWindow (z:=⟨a,v⟩) (x:=x) hR ha (by
+-    grw [norm_le_abs_re_add_abs_im];simp [abs_of_pos (zero_lt_one.trans ha)];dsimp [a,R];linarith)
++    grw [norm_le_abs_re_add_abs_im];grind [abs_eq_max_neg,riemannZeta_ne_zero_of_one_le_re])
+   have r := W 0 0 (by simp) (.inl rfl)
+   have t := W s.im (5*d)⁻¹ (by linarith) (.inr ⟨(-(5*d):ℝ),by
+-    simp [abs_of_pos hd];linarith,by convert bad using 2;apply Complex.ext <;> simp [a],by simp⟩)
++    simp [abs_of_pos hd];linarith,by convert bad using 2;simp [Complex.ext_iff,a],by simp⟩)
+   have u := W (2*s.im) 0 (by simp [abs_mul]) (.inl rfl)
+   have hp := (1:DirichletCharacter ℂ 1).norm_LFunction_product_ge_one (sub_pos.mpr ha) s.im
+-  simp [DirichletCharacter.LFunctionTrivChar,show ∀ x y:ℂ, x+y=⟨_,_⟩ from fun _ _ => rfl,ofReal_def] at hp
+-  have gap (v:ℝ) : ‖riemannZeta ⟨a,v⟩‖ ≤ d⁻¹*‖riemannZeta₁ ⟨a,v⟩‖ := by
+-    rw [riemannZeta_eq_inv_sub_mul (by grind [one_re]),norm_mul,norm_inv]
+-    gcongr
+-    grw [←re_le_norm];simp;linarith
+-  grw [gap 0,gap _,gap _] at hp
++  have gap (v:ℝ) : d ≤ ‖(⟨a,v⟩:ℂ)-1‖ := by grw [←re_le_norm];simp;linarith
++  simp (disch := grind [one_re]) [DirichletCharacter.LFunctionTrivChar,show ∀ x y:ℂ, x+y=⟨_,_⟩ from fun _ _ => rfl,ofReal_def,riemannZeta_eq_inv_sub_mul] at hp
++  repeat grw [←gap] at hp
+   apply Real.log_nonneg at hp
+-  simp (disch := simp [hpos.ne',(good (z:=⟨a,_⟩) ha).1]) [Real.log_mul,Real.log_pow,d] at hp
++  simp [Real.log_mul,Real.log_pow,d,hpos.ne',(good (z:=⟨a,_⟩) ha).1] at hp
+   simp [inv_re,normSq_apply] at r
+-  have pole := inv_anti₀ (by positivity : 0<4*d) hgap
+-  simp only [d,div_eq_mul_inv,mul_inv_rev,inv_inv] at t pole
+-  linarith [triple ha s.im,poleTerm_le (z:=⟨a,_⟩) hht,
+-    poleTerm_le (z:=⟨a,2*s.im⟩) (by simp [abs_mul];linarith),
+-    Real.log_le_self hpos.le,Real.log_two_lt_d9]
++  have pole := inv_anti₀ (by positivity) hgap
++  have negt := inv_anti₀ (by norm_num : (0:ℝ)<1/2) hht
++  grw [re_le_norm,norm_inv,←abs_im_le_norm ((⟨a,_⟩:ℂ)-1)] at t u <;> try (simp;grind)
++  simp [abs_mul,mul_inv_rev] at u
++  simp [d,div_eq_mul_inv,mul_inv_rev] at t pole negt
++  have S (v : ℝ) := hasSum_re (LSeriesSummable_vonMangoldt (s:=⟨a,v⟩) ha).LSeriesHasSum
++  have M := HasSum.nonneg (fun n => by
++    rcases eq_or_ne n 0 with rfl | hn
++    · simp
++    simp (disch:=simp) [LSeries.term_def₀,cpow_def,hn,exp_re,mul_re,mul_im,log_re,log_im,mul_comm (Real.log _),mul_assoc,Real.cos_two_mul]
++    calc
++      0 ≤ 2*Λ n*Real.exp _*(1+Real.cos _)^2 := by positivity
++      _ = _ := by ring) (((S 0).mul_left 3).add ((S s.im).mul_left 4) |>.add (S (2*s.im)))
++  linarith [Real.log_le_self hpos.le,Real.log_two_lt_d9]
+ end ClassicalZFR

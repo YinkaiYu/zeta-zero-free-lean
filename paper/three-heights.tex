@@ -1,0 +1,147 @@
+\section{Three heights and the explicit zero-free region}
+\label{sec:three-heights}
+
+We prove that \(c=2^{-20}\) is admissible. Suppose, to the contrary, that
+\(s=\beta+it\ne1\) is a zero of \(\zeta\) with
+\[
+  R=|t|+2,\qquad L=\log R,\qquad d=\frac{2^{-20}}{L},
+  \qquad \beta\ge 1-d .
+\]
+All logarithms of positive real numbers are natural logarithms.
+Since \(L\ge\log 2>1/2\), we have \(0<d\le 1/100\).
+The nonvanishing of \(\zeta\) on \(\Re z\ge 1\), away from its pole,
+gives \(\beta<1\). In particular, \(s\ne0\) and \(F(s)=0\).
+
+Since \(\beta\ge1-d\ge 99/100\), the height separation
+in \eqref{eq:height-separation} applies. More precisely, its estimate at
+this zero reads
+\[
+    \beta\le |s-1|\le 1-\beta+|t|,
+    \qquad |t|\ge 2\beta-1\ge 1-2d\ge \tfrac12 .
+\]
+The last, weaker lower bound suffices to control both nonreal pole terms.
+
+\subsection{One disk estimate at three centers}
+
+Put \(a=\beta+5d\). Then \(4d\le a-1\), so \(1<a\le 1+5d\).
+For real \(v\) with \(|v|\le 2|t|\), define
+\[
+ z_v=a+iv,\qquad f_v(w)=F(z_v+w),\qquad
+ B_v=\frac{(16R)^2}{|F(z_v)|},\qquad
+ H=1+8\log 2+2L .
+\]
+The denominator is positive because \(a>1\).
+On \(|w|\le 1/2\) we have \(\Re(z_v+w)>1/2\). Also,
+\[
+   |z_v+w|\le a+|v|+\tfrac12\le \tfrac{31}{20}+2|t|,
+   \qquad 2|z_v+w|+2\le \tfrac{51}{10}+4|t|\le 16R .
+\]
+Thus \lean{ClassicalZFR.growth} gives
+\(|f_v(w)|\le(16R)^2=B_v|f_v(0)|\).
+If \(f_v(w)=0\), then \(\Re(z_v+w)\le1\), so \(\Re w\le1-a<0\).
+These are the growth and zero-location hypotheses of \eqref{eq:landau-disk},
+proved by \lean{ClassicalZFR.landau}.
+
+Define two real quantities by
+\[
+   D_v=\Re\sum_{n\ge 1}\frac{\Lambda(n)}{n^{z_v}},
+   \qquad P_v=\Re\frac{1}{z_v-1},
+\]
+where \(\Lambda\) denotes the von Mangoldt function. For \(a>1\) the
+Dirichlet series converges absolutely and equals \(-\zeta'(z_v)/\zeta(z_v)\).
+Logarithmic differentiation of \(F\) consequently gives
+\(\Re(f_v'(0)/f_v(0))=P_v-D_v\).
+This is the sign convention in \lean{ClassicalZFR.good}. With \(x=0\),
+or with an admissible zero witness of weight \(x\), the disk estimate reads
+\begin{equation}
+   x+D_v\le 24\bigl(H-\log|F(z_v)|\bigr)+P_v .
+   \label{eq:three-window}
+\end{equation}
+Indeed, \(1+\log B_v=H-\log|F(z_v)|\). The term \(8\log 2\) is
+\(\log(16^2)\), the coefficient of \(L\) is \(2\), and \(24\) multiplies
+the whole expression.
+
+Use \eqref{eq:three-window} at \(v=0,t,2t\). The outer two applications
+take \(x=0\). At \(v=t\) the translated zero is \(\rho=-5d\), since
+\(z_t-5d=s\). It lies in the witness disk because \(5d\le1/20<1/6\), and
+its weight is \(-\Re(\rho^{-1})=1/(5d)\). The three pole terms satisfy
+\begin{align}
+ P_0&=\frac{1}{a-1}\le\frac{1}{4d},&
+ P_t&\le\frac{1}{|z_t-1|}\le\frac{1}{|t|},&
+ P_{2t}&\le\frac{1}{|z_{2t}-1|}\le\frac{1}{2|t|}.
+ \label{eq:three-poles}
+\end{align}
+For the last two estimates we used \(\Re u\le |u|\) and
+\(|z_v-1|\ge |v|\). In particular \(4P_t+P_{2t}\le9\), since
+\(|t|\ge1/2\).
+
+\subsection{The two weighted positivity estimates}
+
+The first estimate controls the three center values inside the logarithms
+in \eqref{eq:three-window}. The Dirichlet character lemma
+\lean{norm_LFunction_product_ge_one} applies to the trivial character
+of modulus \(1\), real displacement \(a-1>0\), and height \(t\). It gives
+\[
+       1\le |\zeta(z_0)|^3|\zeta(z_t)|^4|\zeta(z_{2t})|.
+\]
+At each center \(|z_v-1|\ge a-1\ge4d\).
+Substituting \(|\zeta(z_v)|=|F(z_v)|/|z_v-1|\) and taking real
+logarithms therefore gives
+\begin{equation}
+ \Sigma_F:=3\log|F(z_0)|+4\log|F(z_t)|+\log|F(z_{2t})|
+             \ge 8\log(4d).
+ \label{eq:three-product}
+\end{equation}
+The exponent \(8=3+4+1\) records all the factors introduced by clearing
+the pole of \(\zeta\).
+
+The second estimate concerns \(D_v\), the Dirichlet series in the
+logarithmic derivative. Absolute convergence at real part \(a>1\) allows
+us to take real parts term by term and combine the three sums. For
+\(\theta_n=t\log n\) the result is
+\begin{align}
+ 3D_0+4D_t+D_{2t}
+   &=\sum_{n\ge1}\Lambda(n)n^{-a}
+           \bigl(3+4\cos\theta_n+\cos(2\theta_n)\bigr)\notag\\
+   &=\sum_{n\ge1}2\Lambda(n)n^{-a}(1+\cos\theta_n)^2\ge0 .
+ \label{eq:three-series}
+\end{align}
+The double-angle identity gives the square, and every coefficient
+\(\Lambda(n)n^{-a}\) is nonnegative. In the formal proof
+\lean{HasSum.nonneg} sums these pointwise inequalities.
+Thus \eqref{eq:three-product} gives a lower bound for a sum of logarithms,
+while \eqref{eq:three-series} gives the sign of a sum of derivatives.
+
+\subsection{Closing the numerical inequality}
+
+Multiply \eqref{eq:three-window} at \(0,t,2t\) by \(3,4,1\),
+respectively, and add. By \eqref{eq:three-series} the left side is at
+least \(4/(5d)\). On the right, \eqref{eq:three-poles} bounds the total
+pole contribution by \(3/(4d)+9\). Hence
+\[
+ \frac{4}{5d}
+ \le 192H-24\Sigma_F+\frac{3}{4d}+9 .
+\]
+Inserting \eqref{eq:three-product} and using
+\(4/5-3/4=1/20\) gives
+\begin{equation}
+     \frac{1}{20d}\le 192\bigl(H-\log(4d)\bigr)+9 .
+     \label{eq:three-final}
+\end{equation}
+Here \(4d=2^{-18}/L\). In particular,
+\(H-\log(4d)=1+26\log 2+2L+\log L\), with \(26=8+18\).
+Substituting into \eqref{eq:three-final} yields
+\[
+    \frac{2^{20}}{20}L
+        \le 201+4992\log 2+384L+192\log L .
+\]
+To check the constants, use \(\log L\le L\) and \(\log 2<1\).
+The last inequality would imply
+\[
+     (2^{20}-11520)L
+       \le 4020+99840\log 2 < 103860 .
+\]
+But \(2^{20}-11520=1037056\) and \(L\ge\log 2>1/2\), so its left
+side exceeds \(518528\). This contradiction proves
+\(\zeta(s)\ne0\) throughout the claimed region for \(s\ne1\), with the
+explicit constant \(2^{-20}\).
