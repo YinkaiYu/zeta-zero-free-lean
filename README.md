@@ -5,15 +5,17 @@
 
 ## The problem and the competition
 
-The Riemann zeta function connects complex analysis with the distribution of primes. The classical zero-free region theorem gives a strip along the line Re(s) = 1 in which the function has no zeros. Its width decreases slowly as the absolute value of the imaginary part grows. Such estimates help bound the error in counting primes. The Riemann hypothesis makes a stronger prediction, placing every nontrivial zero on Re(s) = 1/2. This archive gives an unconditional proof of the classical region.
+The Riemann zeta function connects complex analysis with the distribution of primes. The classical zero-free region theorem gives a strip along the line $`\operatorname{Re}(s)=1`$ in which the function has no zeros. Its width decreases slowly as the absolute value of the imaginary part grows. Such estimates help bound the error in counting primes. The Riemann hypothesis makes a stronger prediction, placing every nontrivial zero on $`\operatorname{Re}(s)=\tfrac12`$. This archive gives an unconditional proof of the classical region.
 
 The Agentic Science Challenge selected five theorems from Levent Alpöge’s formalization as separate competition problems. Core 1 is the classical zero-free region. Entrants must prove the same Lean 4 statement using a fixed version of Mathlib, Lean’s mathematics library. The Lean kernel checks the proof. The competition then measures its source length in normalized tokens. A Core 1 record means a shorter verified proof of this particular theorem. The green progress curve combines the best results across all five problems.
 
 ## The explicit bound
 
-For every complex number s = σ + it with s ≠ 1, the proof establishes
+For every complex number $`s=\sigma+it`$ with $`s\ne1`$, the proof establishes
 
-> **σ ≥ 1 − 2⁻²⁰ / log(∣t∣ + 2)　⟹　ζ(s) ≠ 0.**
+```math
+\sigma \ge 1-\frac{2^{-20}}{\log(|t|+2)} \quad\Longrightarrow\quad \zeta(s)\ne 0.
+```
 
 Submission **#96295** held the Core 1 record in the 22 November 2026, 06:32:56 UTC+8 leaderboard snapshot. Its single Lean file uses **2,388 normalized leaderboard tokens**, down **88.97%** from the 21-file, 21,641-token reference closure. Playground awarded **65.873483**. The archive contains the five submitted sources spanning our four record improvements. [Challenge statement](https://play.bohrium.com/challenges/lean-4-verification-rh-core-pillar-1-5-classical-z-c7f72729) · [Progress curve](https://riemann.verifytask.cn/) · [Archived measurements](records/results.json)
 
@@ -23,23 +25,27 @@ The reference theorem, `Formalism.ZF.zeroFreeRegion`, assembles its local Landau
 
 ## The local estimate and its three applications
 
-**1. Retain the contribution the caller needs.** Let f be entire, with f(0) ≠ 0 and every zero in the closed left half-plane. Suppose ∣f(w)∣ ≤ B∣f(0)∣ on the closed disk of radius 1/2, so B ≥ 1. Take x = 0, or choose a zero ρ with ∣ρ∣ ≤ 1/6 and x ≤ −Re(1/ρ). The submitted lemma `ClassicalZFR.landau` proves
+**1. Retain the contribution the caller needs.** Let f be entire, with $`f(0)\ne0`$ and every zero in the closed left half-plane. Suppose $`|f(w)|\le B|f(0)|`$ on the closed disk of radius 1/2, so B ≥ 1. Take x = 0, or choose a zero ρ with $`|\rho|\le\tfrac16`$ and $`x\le-\operatorname{Re}(1/\rho)`$. The submitted lemma `ClassicalZFR.landau` proves
 
-> x − Re(f′(0)/f(0)) ≤ 24(log B + 1).
+```math
+x-\operatorname{Re}\!\left(\frac{f'(0)}{f(0)}\right)\le 24(\log B+1).
+```
 
-**2. Remove one zero.** Take g to be the divided difference of f at ρ. Mathlib’s `differentiableOn_dslope` gives differentiability even at ρ, and `sub_smul_dslope_of_zero` gives f(w) = (w − ρ)g(w). On the circle ∣u∣ = 1/2, the reverse triangle inequality gives ∣u − ρ∣ ≥ 1/2 − 1/6 = 1/3 ≥ 2∣ρ∣. Since ∣f(0)∣ = ∣ρ∣·∣g(0)∣, we obtain
+**2. Remove one zero.** Take g to be the divided difference of f at ρ. Mathlib’s `differentiableOn_dslope` gives differentiability even at ρ, and `sub_smul_dslope_of_zero` gives f(w) = (w − ρ)g(w). On the circle ∣u∣ = 1/2, the reverse triangle inequality gives $`|u-\rho|\ge\tfrac12-\tfrac16=\tfrac13\ge2|\rho|`$. Since $`|f(0)|=|\rho|\,|g(0)|`$, we obtain
 
-> ∣g(u)∣ = ∣f(u)∣ / ∣u − ρ∣ ≤ (B/2)∣g(0)∣.
+```math
+|g(u)|=\frac{|f(u)|}{|u-\rho|}\le\frac{B|\rho|\,|g(0)|}{2|\rho|}=\frac B2\,|g(0)|.
+```
 
-The maximum modulus principle extends the bound to the closed disk. Logarithmic differentiation gives f′(0)/f(0) = −1/ρ + g′(0)/g(0). The condition on x cancels the removed term, so it suffices to apply the lemma recursively to g with zero weight. A repeated zero can be removed again. This handles multiplicities without carrying a finite product through the proof.
+The maximum modulus principle extends the bound to the closed disk. Logarithmic differentiation gives $`\frac{f'(0)}{f(0)}=-\frac1\rho+\frac{g'(0)}{g(0)}`$. The condition on x cancels the removed term, so it suffices to apply the lemma recursively to g with zero weight. A repeated zero can be removed again. This handles multiplicities without carrying a finite product through the proof.
 
-An earlier version chose n with B < 2ⁿ. The final code chooses a natural number n > 2B. At n = m + 1, the facts B ≥ 1 and 2B < m + 1 imply B < m, precisely the recursive premise 2(B/2) < m. On return, log(B/2) ≤ log B finishes the bound. The source credits Pi’s public submission for this monotonicity step. [Final disk lemma](Solution.lean#L75-L119) · [Induction diff](diffs/96285-to-96293.diff)
+An earlier version chose n with $`B<2^n`$. The final code chooses a natural number $`n>2B`$. At n = m + 1, the facts B ≥ 1 and 2B < m + 1 imply B < m, precisely the recursive premise 2(B/2) < m. On return, log(B/2) ≤ log B finishes the bound. The source credits Pi’s public submission for this monotonicity step. [Final disk lemma](Solution.lean#L75-L119) · [Induction diff](diffs/96285-to-96293.diff)
 
-**3. Account for the constant 24.** When no witness exists, x = 0. Any zero inside the inner disk would have −Re(1/ρ) ≥ 0 and would supply a witness. Thus f′/f has a primitive G there with G(0) = 0. From f = f(0) exp(G) we get Re G ≤ log B. Put A = log B + 1. Apply `borelCaratheodory_zero` on the disk of radius 1/6 and evaluate on the circle of radius 1/12 to obtain ∣G∣ ≤ 2A. Cauchy’s derivative bound then gives ∣f′(0)/f(0)∣ = ∣G′(0)∣ ≤ 2A/(1/12) = 24A. Lean supplies that last step as `norm_deriv_le_of_forall_mem_sphere_norm_le`. [Fixed-circle estimate diff](diffs/96281-to-96285.diff)
+**3. Account for the constant 24.** When no witness exists, x = 0. Any zero inside the inner disk would have −Re(1/ρ) ≥ 0 and would supply a witness. Thus f′/f has a primitive G there with G(0) = 0. From f = f(0) exp(G) we get Re G ≤ log B. Put A = log B + 1. Apply `borelCaratheodory_zero` on the disk of radius 1/6 and evaluate on the circle of radius 1/12 to obtain ∣G∣ ≤ 2A. Cauchy’s derivative bound then gives $`\left|\frac{f'(0)}{f(0)}\right|=|G'(0)|\le\frac{2A}{1/12}=24A`$. Lean supplies that last step as `norm_deriv_le_of_forall_mem_sphere_norm_le`. [Fixed-circle estimate diff](diffs/96281-to-96285.diff)
 
-**4. Use the lemma at three heights.** Let F be the entire extension of (s − 1)ζ(s). The same Abel–Mellin remainder gives quadratic growth and a lower bound ∣t∣ ≥ 1/2 for the height of a hypothetical zero β + it in the claimed region. Put L = log(∣t∣ + 2), d = 2⁻²⁰/L and a = β + 5d. Translate F to a, a + it and a + 2it. The middle translate has a zero at −5d and contributes 4/(5d) after weighting. The real pole term contributes at most 3/(4d), leaving 1/(20d).
+**4. Use the lemma at three heights.** Let F be the entire extension of (s − 1)ζ(s). The same Abel–Mellin remainder gives quadratic growth and a lower bound ∣t∣ ≥ 1/2 for the height of a hypothetical zero β + it in the claimed region. Put $`L=\log(|t|+2)`$, $`d=2^{-20}/L`$ and a = β + 5d. Translate F to a, a + it and a + 2it. The middle translate has a zero at −5d and contributes 4/(5d) after weighting. The real pole term contributes at most 3/(4d), leaving 1/(20d).
 
-Two positivity estimates control the remaining terms. A product inequality for the character of modulus one bounds the weighted logarithms of the three center values from below. For the logarithmic derivatives, 3 + 4 cos θ + cos(2θ) = 2(1 + cos θ)² and the nonnegative von Mangoldt coefficients give a nonnegative weighted series. Substitution requires (2²⁰ − 11520)L < 103860, while L ≥ log 2 > 1/2 makes the left side greater than 518528. This proves the stated region. [Full calculation](paper/three-heights.tex)
+Two positivity estimates control the remaining terms. A product inequality for the character of modulus one bounds the weighted logarithms of the three center values from below. For the logarithmic derivatives, $`3+4\cos\theta+\cos(2\theta)=2(1+\cos\theta)^2`$ and the nonnegative von Mangoldt coefficients give a nonnegative weighted series. Substitution requires $`(2^{20}-11520)L<103860`$, while $`L\ge\log 2>\tfrac12`$ makes the left side greater than 518528. This proves the stated region. [Full calculation](paper/three-heights.tex)
 
 ## Accounting for the 88.97% reduction
 
@@ -53,7 +59,7 @@ The reference closure contains 21 Lean files and 21,641 normalized tokens. Our f
 |---|---:|---:|---:|---|
 | [#96267 → #96281](diffs/96267-to-96281.diff) | 2,892 | 236 | 132 | Define the real part of the von Mangoldt series directly. Combine its three sums before invoking positivity. |
 | [#96281 → #96285](diffs/96281-to-96285.diff) | 2,724 | 168 | 38 | Replace a variable-radius derivative argument with Cauchy's estimate on one circle. Rewrite the same complex logarithmic derivative at all three centers. |
-| [#96285 → #96293](diffs/96285-to-96293.diff) | 2,424 | 300 | 262 | Refactor the divided-difference induction around n > 2B and replace the parameter-dependent growth estimate with an intrinsic quadratic bound. |
+| [#96285 → #96293](diffs/96285-to-96293.diff) | 2,424 | 300 | 262 | Refactor the divided-difference induction around $`n>2B`$ and replace the parameter-dependent growth estimate with an intrinsic quadratic bound. |
 | [#96293 → #96295](diffs/96293-to-96295.diff) | 2,388 | 36 | 36 | Preserve the outer factor in partial summation, rewrite the halved budget in the induction hypothesis, and close the trigonometric square directly. |
 
 Each row covers the entire patch. The paper traces individual replacements to the Mathlib and Lean declarations. The final row also advanced the pillar record while the five-pillar curve rounded to 41.61% on both sides. [Engineering details](paper/engineering.tex) · [All five source snapshots](snapshots/)
