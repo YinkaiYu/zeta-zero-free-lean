@@ -79,3 +79,7 @@ lake env leanchecker Solution
 第一条命令会重算五份源码的词元数和 SHA-256，并顺序应用四份补丁，验证每一步都能逐字节还原下一次提交。工程固定使用 Lean 4.34.1 和题目指定的 Mathlib 修订。类型检查文件核对完整定理陈述并列出依赖公理，结果为 `propext`、`Classical.choice`、`Quot.sound`。最后一条命令重放已编译的证明。[类型检查](Audit.lean) · [依赖版本](lake-manifest.json)
 
 这条路线继承 de la Vallée Poussin 的经典三高度论证。赛事参考形式化来自 Levent Alpöge。差商剥离后用单调性放宽增长界的一步，在实际提交的源码中已注明参考 Pi 的公开提交 #96263。论文给出了每项工程改写对应的数学式、Mathlib 声明和完整差异。[Alpöge 的源码说明](https://alpo.ge/remark.pdf) · [Pi 的公开提交](https://riemann.verifytask.cn/api/attempt/96263) · [固定版本的 Mathlib](https://github.com/leanprover-community/mathlib4/tree/d13f23b723b8a846827a245b89c10fc7d3f11612)
+
+## 代码许可
+
+本仓库原创的 Lean 证明代码和复核脚本采用 [Apache License 2.0](LICENSE)。参考形式化、Mathlib 与前序提交的署名见上文。

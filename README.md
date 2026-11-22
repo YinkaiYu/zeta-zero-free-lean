@@ -85,3 +85,7 @@ To build the paper, run `pdflatex zero-free-region.tex` twice from `paper/`. The
 ## Sources and credit
 
 The challenge supplies Levent Alpöge's reference theorem and its closure. The classical argument uses the de la Vallée Poussin weights. The formalization draws on Mathlib's Mellin transform, divided differences, Borel–Carathéodory inequality and Dirichlet series. The submitted source credits Pi's #96263 for the monotonicity step after halving the growth budget. [Challenge](https://play.bohrium.com/challenges/lean-4-verification-rh-core-pillar-1-5-classical-z-c7f72729) · [Pinned Mathlib](https://github.com/leanprover-community/mathlib4/tree/d13f23b723b8a846827a245b89c10fc7d3f11612) · [Pi's submission](https://riemann.verifytask.cn/api/attempt/96263)
+
+## Code license
+
+The original Lean proof code and verification scripts in this repository are available under the [Apache License 2.0](LICENSE). Attribution for the reference formalization, Mathlib and earlier submissions appears above.
